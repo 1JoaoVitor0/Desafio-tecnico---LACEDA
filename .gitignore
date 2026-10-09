@@ -218,3 +218,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Dados grandes (o CNEFE não deve ir pro Git)
+data/cnefe*
