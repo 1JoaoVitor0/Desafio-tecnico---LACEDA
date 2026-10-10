@@ -29,6 +29,13 @@ ABREVIACOES = {
 
 VALORES_NULOS = {"NONE", "NAN", "NULL"}
 
+STOPWORDS = {"DE", "DA", "DO", "DAS", "DOS", "E"}
+
+TIPOS = {
+    "RUA", "AVENIDA", "TRAVESSA", "ESTRADA", "FAZENDA", "RODOVIA", "POVOADO",
+    "PRACA", "ALAMEDA", "LOTEAMENTO", "CONDOMINIO", "DISTRITO", "SITIO", "VILA",
+    "CAMINHO", "BECO", "CONJUNTO", "COMUNIDADE", "ASSENTAMENTO", "CORREDOR", "VIA",
+}
 
 def normalizar_texto(texto):
     if pd.isna(texto):
@@ -46,3 +53,14 @@ def normalizar_numero(numero):
         return None
     digitos = re.sub(r"\D", "", str(numero))
     return digitos.lstrip("0") or None
+
+def chave_solta(texto_normalizado):
+    if texto_normalizado is None:
+        return None
+    tokens = [
+        t for t in texto_normalizado.split()
+        if t not in STOPWORDS and t not in TIPOS
+    ]
+    if not tokens:
+        tokens = texto_normalizado.split()
+    return " ".join(sorted(tokens)) or None
