@@ -2,44 +2,41 @@ import pandas as pd
 
 from dados import carregar_busca, montar_grupos
 
+POR_RUA = 10
 
-def mais_frequente(g):
-    """Setor com mais endereços na rua."""
-    return g["COD_SETOR"].value_counts().index[0]
-
-
-def mais_proximo(g, n):
-    """Setor cuja casa numerada está mais perto de n (None se ninguém tem número)."""
-    num = pd.to_numeric(g["numero_norm"], errors="coerce")
-    distancia = (num - n).abs()
-    por_setor = distancia.groupby(g["COD_SETOR"]).min().dropna().sort_values()
-    return por_setor.index[0] if len(por_setor) else None
-
+from matching import mais_frequente, mais_proximo, mais_proximo_mesmo_lado
 
 busca = carregar_busca()
 grupos = montar_grupos(busca)
 
-casos = pd.concat(
-    [g.dropna(subset=["numero_norm"]) for g in grupos.values() if g["COD_SETOR"].nunique() > 1]
-)
-amostra = casos.sample(min(3000, len(casos)), random_state=1)
-print(f"Endereços avaliados: {len(amostra)}")
+partes = []
+for g in grupos.values():
+    if g["COD_SETOR"].nunique() > 1:
+        com_numero = g.dropna(subset=["numero_norm"])
+        if len(com_numero):
+            partes.append(com_numero.sample(min(POR_RUA, len(com_numero)), random_state=1))
+amostra = pd.concat(partes)
+print(f"Ruas avaliadas: {len(partes)} | endereços avaliados: {len(amostra)}")
 
-acertos = {"mais_frequente": 0, "numero_proximo": 0, "cep_e_numero": 0}
+acertos = {}
 for idx, linha in amostra.iterrows():
     g = grupos[(linha["COD_MUNICIPIO"], linha["chave"])].drop(index=idx)
     n = int(linha["numero_norm"])
     verdadeiro = linha["COD_SETOR"]
 
-    palpite_freq = mais_frequente(g)
-    palpite_num = mais_proximo(g, n) or palpite_freq
-
+    freq = mais_frequente(g)
     g_cep = g[g["CEP"] == linha["CEP"]]
-    palpite_cep = mais_proximo(g_cep if len(g_cep) > 0 else g, n) or palpite_freq
+    base = g_cep if len(g_cep) > 0 else g
 
-    acertos["mais_frequente"] += palpite_freq == verdadeiro
-    acertos["numero_proximo"] += palpite_num == verdadeiro
-    acertos["cep_e_numero"] += palpite_cep == verdadeiro
+    palpites = {
+        "mais_frequente": freq,
+        "numero_proximo": mais_proximo(g, n) or freq,
+        "cep_e_numero": mais_proximo(base, n) or freq,
+        "cep_numero_mesmo_lado": mais_proximo_mesmo_lado(base, n) or mais_proximo(base, n) or freq,
+        "cep_frequente (consulta sem numero)": mais_frequente(base),
+    }
+    for nome, palpite in palpites.items():
+        acertos[nome] = acertos.get(nome, 0) + (palpite == verdadeiro)
 
 print()
 for nome, n_acertos in acertos.items():

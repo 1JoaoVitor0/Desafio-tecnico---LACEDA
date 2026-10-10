@@ -55,7 +55,7 @@ def normalizar_numero(numero):
     return digitos.lstrip("0") or None
 
 def chave_solta(texto_normalizado):
-    if texto_normalizado is None:
+    if pd.isna(texto_normalizado):
         return None
     tokens = [
         t for t in texto_normalizado.split()
