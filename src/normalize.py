@@ -64,3 +64,12 @@ def chave_solta(texto_normalizado):
     if not tokens:
         tokens = texto_normalizado.split()
     return " ".join(sorted(tokens)) or None
+
+def tipo_logradouro(texto_normalizado):
+    """Tipo do logradouro: a primeira palavra, se for um tipo conhecido (senão None)."""
+    if pd.isna(texto_normalizado):
+        return None
+    tokens = texto_normalizado.split()
+    if not tokens:
+        return None
+    return tokens[0] if tokens[0] in TIPOS else None
