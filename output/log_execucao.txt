@@ -1,0 +1,5 @@
+Execução em 2026-10-11 22:40:15
+1/3 Filtrar o CNEFE pelos municípios da base de busca: pulada
+2/3 Normalizar os logradouros do CNEFE: 9s
+3/3 Vincular os endereços aos setores censitários: 8s
+Resultado por status: AMBIGUO=65, NAO_ENCONTRADO=26, ENCONTRADO=16
